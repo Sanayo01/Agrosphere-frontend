@@ -3,23 +3,28 @@ import Layout from '../components/Layout';
 import MobileNavbar from '../components/MobileNavbar';
 import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
+// 1. IMPORT YOUR CONFIG
+import { AGROCOIN_SYMBOL } from '../config';
 
 const StandardOrderPage: React.FC = () => {
   const { clearCart, transaction } = useCart();
+  // const navigate = useNavigate(); // Available for future routing needs
   
-  // Clear the cart state immediately upon loading this page
   useEffect(() => {
-    // We only clear the cart and transaction data if it exists.
+    // Clear the cart state immediately upon loading this page
     if (transaction) {
       clearCart();
     }
   }, [clearCart, transaction]);
 
-  // Handle case where transaction data is missing (should be prevented by the router)
   if (!transaction) {
     return (
         <Layout>
-            <h1 className="text-center p-4">Error: Order details missing.</h1>
+            <div className="flex flex-col items-center justify-center h-screen text-center p-6">
+                <span className="text-4xl mb-4">⚠️</span>
+                <h1 className="text-xl font-bold text-gray-800">Order details missing.</h1>
+                <Link to="/" className="mt-4 text-green-600 font-semibold">Return Home</Link>
+            </div>
             <MobileNavbar />
         </Layout>
     );
@@ -27,52 +32,52 @@ const StandardOrderPage: React.FC = () => {
 
   return (
     <Layout>
-      {/* 1. Header (Simple) */}
       <header className="p-4 bg-green-600 text-white sticky top-0 z-10 shadow-md">
-        <h1 className="text-lg font-semibold text-center">Order Placed!</h1>
+        <h1 className="text-lg font-semibold text-center">Order Confirmed!</h1>
       </header>
 
-      {/* 2. Success and Summary */}
-      <main className="grow overflow-y-auto p-6 space-y-6 text-center pb-24">
+      <main className="grow overflow-y-auto p-6 space-y-6 text-center pb-32">
         
-        {/* Success Icon */}
         <div className="flex flex-col items-center justify-center">
-            <span className="text-6xl text-green-500">✅</span>
-            <h2 className="text-3xl font-extrabold text-green-700 mt-2">Payment Successful!</h2>
-            <p className="text-gray-600 mt-1">Your order has been confirmed.</p>
+            <span className="text-6xl text-green-500 animate-pulse">✅</span>
+            <h2 className="text-3xl font-extrabold text-green-700 mt-2">Success!</h2>
+            <p className="text-gray-600 mt-1">Your standard order is being processed.</p>
         </div>
         
         {/* Order Details Card */}
-        <div className="p-4 bg-green-50 rounded-xl shadow-lg border border-green-300 space-y-3">
-            <p className="text-sm text-gray-700 font-medium">Total Amount Paid:</p>
+        <div className="p-4 bg-green-50 rounded-xl shadow-lg border border-green-300 space-y-1">
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Amount Paid</p>
             <p className="text-4xl font-extrabold text-green-800">₦{transaction.totalNaira.toLocaleString()}</p>
+            {/* Show AC equivalent for consistency even in standard orders */}
+            <p className="text-sm font-semibold text-amber-600">
+                Processed via {AGROCOIN_SYMBOL || 'AC'} Gateway
+            </p>
         </div>
 
         {/* --- STANDARD ORDER BLOCK --- */}
-        <div className="p-4 bg-gray-100 rounded-xl shadow-md border border-gray-300 text-left space-y-2">
-            <h3 className="text-lg font-bold text-gray-800 flex items-center space-x-2">
-                <span>📦</span> <span>Order Tracking Details</span>
+        <div className="p-4 bg-white rounded-xl shadow-md border border-gray-200 text-left space-y-2">
+            <h3 className="text-md font-bold text-gray-800 flex items-center space-x-2">
+                <span>📦</span> <span>Logistics Tracking</span>
             </h3>
-            <p className="text-sm text-gray-700">This order is being processed and will be delivered using standard Agrosphere logistics.</p>
-            <div className="font-mono text-xs p-1 bg-gray-50 rounded break-all mt-0.5">
-                Tracking ID: AGRO-STD-ORD-{Math.random().toString(36).substring(2, 10).toUpperCase()}
+            <p className="text-xs text-gray-600">This order uses Agrosphere standard delivery. Note: Standard items do not include end-to-end blockchain farm traceability.</p>
+            
+            <div className="font-mono text-[10px] p-2 bg-gray-50 rounded border border-gray-200 break-all mt-2 text-gray-500">
+                TRACKING-ID: AGRO-STD-{Date.now().toString().slice(-6)}-{Math.random().toString(36).substring(2, 6).toUpperCase()}
             </div>
         </div>
-        {/* --- END STANDARD ORDER BLOCK --- */}
-
 
         {/* Delivery Timeline */}
         <div className="p-4 bg-white rounded-xl shadow-md border border-gray-200 text-left">
-            <h3 className="text-lg font-bold text-gray-800 mb-2">Delivery Timeline</h3>
-            <p className="text-gray-700">Estimated delivery is tomorrow, 10 AM - 1 PM.</p>
-            <Link to="/" className="mt-3 block text-sm font-medium text-blue-600 hover:underline">
+            <h3 className="text-md font-bold text-gray-800 mb-1">Estimated Delivery</h3>
+            <p className="text-gray-600 text-sm">Tomorrow, between 10 AM - 1 PM.</p>
+            <Link to="/" className="mt-2 block text-sm font-medium text-blue-600 hover:underline">
                 View Estimated Route
             </Link>
         </div>
 
       </main>
 
-      {/* 3. Footer Navigation */}
+      {/* Footer Navigation */}
       <div className="fixed bottom-0 w-full max-w-sm bg-white p-4 border-t border-gray-300 shadow-2xl z-20">
         <Link to="/" className="w-full block text-center py-4 bg-green-600 text-white font-bold text-lg rounded-lg hover:bg-green-700 transition-colors">
           Return to Dashboard

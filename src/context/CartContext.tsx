@@ -18,7 +18,9 @@ interface TraceableItemSummary {
 
 // Define the shape of the Transaction Data - UPDATED
 interface TransactionData {
+    id?: string;
     totalNaira: number;
+    totalAgroCoin?: number;
     hasTraceableGoods: boolean; // <--- NEW FLAG for routing
     traceableItems: TraceableItemSummary[];
 }

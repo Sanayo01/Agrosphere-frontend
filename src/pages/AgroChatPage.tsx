@@ -1,16 +1,28 @@
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
+// 1. IMPORT YOUR CONFIG
+import { API_BASE_URL } from '../config'; 
 
-// Define the message types
 interface Message {
   id: number;
   text: string;
   sender: 'user' | 'ai';
 }
 
-/**
- * A dedicated page for the AI Farming Advisor Chat Interface.
- */
+const MessageBubble: React.FC<{ message: Message }> = ({ message }) => (
+  <div className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+    <div
+      className={`max-w-xs px-4 py-2 rounded-lg ${
+        message.sender === 'user'
+          ? 'bg-green-600 text-white rounded-br-none'
+          : 'bg-gray-200 text-gray-800 rounded-bl-none'
+      }`}
+    >
+      <p className="text-sm">{message.text}</p>
+    </div>
+  </div>
+);
+
 const AgroChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -25,43 +37,54 @@ const AgroChatPage: React.FC = () => {
     },
   ]);
   const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false); // New: Show AI is thinking
 
-  const handleSendMessage = () => {
-    if (input.trim() === '') return;
+  const handleSendMessage = async () => {
+    if (input.trim() === '' || isLoading) return;
 
+    const userText = input;
     const newUserMessage: Message = {
-      id: messages.length + 1,
-      text: input,
+      id: Date.now(), // Use timestamp for unique IDs
+      text: userText,
       sender: 'user',
     };
 
-    setMessages([...messages, newUserMessage]);
+    setMessages((prev) => [...prev, newUserMessage]);
     setInput('');
+    setIsLoading(true);
 
-    // Simulate an AI response after a short delay
-    setTimeout(() => {
-      const newAiMessage: Message = {
-        id: messages.length + 2,
-        text: `Based on your question: "${input}", I recommend you check your soil moisture. If you need an expert, visit the Experts tab.`,
+    try {
+      // 2. USE THE API_BASE_URL FROM CONFIG
+      const response = await fetch(`${API_BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userText }),
+      });
+
+      const data = await response.json();
+
+      const aiResponse: Message = {
+        id: Date.now() + 1,
+        text: data.reply || `I've analyzed your question about "${userText}". Check soil moisture or see an Expert.`,
         sender: 'ai',
       };
-      setMessages((prev) => [...prev, newAiMessage]);
-    }, 1000);
+      setMessages((prev) => [...prev, aiResponse]);
+    } catch (error) {
+      console.error("AI Chat Error:", error);
+      // Fallback for demo if backend isn't live yet
+      setTimeout(() => {
+        setMessages((prev) => [...prev, {
+          id: Date.now() + 1,
+          text: "I'm having trouble connecting to the AgroSphere brain, but usually, I'd suggest checking for pests.",
+          sender: 'ai'
+        }]);
+      }, 1000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const MessageBubble: React.FC<{ message: Message }> = ({ message }) => (
-    <div className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={`max-w-[80%] p-3 rounded-xl shadow-sm ${
-          message.sender === 'user'
-            ? 'bg-green-600 text-white rounded-br-none'
-            : 'bg-gray-100 text-gray-800 rounded-tl-none'
-        }`}
-      >
-        {message.text}
-      </div>
-    </div>
-  );
+  // ... (Keep your MessageBubble and Return JSX the same)
 
   return (
     <Layout>

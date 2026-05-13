@@ -1,41 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import MobileNavbar from '../components/MobileNavbar';
 import ProductCard from '../components/ProductCard';
 import TraceabilityModal from '../components/TraceabilityModal';
-import { useCart } from '../context/CartContext'; // <--- NEW IMPORT
-import { Link } from 'react-router-dom'; // <--- REQUIRED for the cart icon
+import { useCart } from '../context/CartContext';
+import { Link } from 'react-router-dom';
+// 1. IMPORT YOUR CONFIG
+import { API_BASE_URL } from '../config';
 
 const MarketplacePage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null); 
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Get cart state and functions from context
-  const { cartCount, addItemToCart } = useCart(); // <--- USE CART CONTEXT
+  const { cartCount, addItemToCart } = useCart();
 
-  // Sample data for the products (remains the same)
-  const products = [
+  // --- 2. DYNAMIC TRACEABILITY FALLBACK ---
+  // This ensures your demo works even without a database
+  const fallbackProducts = [
     { 
       id: 1, name: 'Organic Tomatoes', weight: '1kg', priceN: 800, priceAC: 8, imageUrl: '/assets/tomatoes.jpg', isTraceable: true,
       traceData: { 
-        blockchainID: '0x1A2B3C4D5E6F7G8H9I0J', 
+        blockchainID: '0x1A2B3C-SEP-2026', 
         impactScore: 'A+',
         production: [
             { label: 'Farm', value: 'Agrosphere Co-op Farm 007' },
-            { label: 'Harvest Date', value: '2025-12-05' },
+            { label: 'Harvest Date', value: '2026-01-05' },
             { label: 'Expert Consulted', value: 'Yes (Agronomist Ada)' },
         ],
         logistics: [
-            { label: 'Departure', value: '2025-12-09, 08:00 AM' },
+            { label: 'Departure', value: '2026-01-09, 08:00 AM' },
             { label: 'Logistics Partner', value: 'Agrosphere Delivery' },
             { label: 'Temp (Transit)', value: '18°C' },
         ],
       }
     },
     { id: 2, name: 'Fresh Pepper Mix', weight: '1kg', priceN: 800, priceAC: 8, imageUrl: '/assets/pepper.jpg', isTraceable: false },
-    { id: 3, name: 'Sweet Potatoes', weight: 'Bumper Bag', priceN: 800, priceAC: 8, imageUrl: '/assets/potatoes.jpg', isTraceable: true },
-    { id: 4, name: 'Heirloom Tomato Seeds', weight: 'Starter Kit', priceN: 800, priceAC: 8, imageUrl: '/assets/seeds.jpg', isTraceable: false },
+    { id: 3, name: 'Sweet Potatoes', weight: 'Bumper Bag', priceN: 1200, priceAC: 12, imageUrl: '/assets/potatoes.jpg', isTraceable: true },
+    { id: 4, name: 'Heirloom Tomato Seeds', weight: 'Starter Kit', priceN: 500, priceAC: 5, imageUrl: '/assets/seeds.jpg', isTraceable: false },
   ];
+
+  // 3. FETCH DYNAMIC PRODUCTS
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/products`);
+        const data = await response.json();
+        setProducts(data.length > 0 ? data : fallbackProducts);
+      } catch (e) {
+        console.warn("Using local traceability data for demo.");
+        setProducts(fallbackProducts);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getProducts();
+  }, []);
 
   const handleTraceClick = (product: any) => {
     setSelectedProduct(product.traceData);
@@ -44,14 +65,11 @@ const MarketplacePage: React.FC = () => {
   
   return (
     <Layout>
-      {/* 1. Header - CART ICON UPDATED with counter and Link */}
       <header className="flex items-center justify-between p-4 bg-green-600 text-white sticky top-0 z-10 shadow-md">
         <h1 className="text-xl font-bold">Agrosphere Marketplace</h1>
         
-        {/* Cart Icon with Counter and Link */}
         <Link to="/cart" className="relative p-2 hover:bg-green-700 rounded-full transition-colors">
             <span className="text-2xl">🛒</span>
-            {/* Cart Counter Badge - ONLY SHOW IF COUNT > 0 */}
             {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-green-600">
                     {cartCount}
@@ -60,35 +78,39 @@ const MarketplacePage: React.FC = () => {
         </Link>
       </header>
 
-      {/* 2. Category Tabs (no change) */}
-      <div className="flex justify-around p-2 bg-white sticky top-[68px] z-5 border-b border-gray-200">
-        <button className="py-2 px-4 text-sm font-semibold text-green-700 border-b-2 border-green-700">
+      {/* Category Tabs */}
+      <div className="flex justify-around p-2 bg-white sticky top-[68px] z-5 border-b border-gray-200 overflow-x-auto">
+        <button className="py-2 px-4 text-sm font-semibold text-green-700 border-b-2 border-green-700 shrink-0">
           Fresh Produce
         </button>
-        <button className="py-2 px-4 text-sm text-gray-500 hover:text-green-600">
+        <button className="py-2 px-4 text-sm text-gray-500 hover:text-green-600 shrink-0">
           Seeds & Tools
         </button>
-        <button className="py-2 px-4 text-sm text-gray-500 hover:text-green-600">
-          Expert Consultations
+        <button className="py-2 px-4 text-sm text-gray-500 hover:text-green-600 shrink-0">
+          Consultations
         </button>
       </div>
 
-      {/* 3. Product Grid */}
-      <main className="p-4 grid grid-cols-2 gap-4 mb-16">
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product} // Pass the full product object
-            weight={product.weight}
-            imageUrl={product.imageUrl}
-            isTraceable={product.isTraceable}
-            onTraceClick={() => handleTraceClick(product)}
-            onAddToCart={() => addItemToCart(product)} // <--- HOOKED UP ADD TO CART
-          />
-        ))}
+      <main className="p-4 grid grid-cols-2 gap-4 mb-24">
+        {loading ? (
+            <div className="col-span-2 text-center py-20 text-gray-400 animate-pulse">
+                Syncing Traceability Nodes...
+            </div>
+        ) : (
+            products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                weight={product.weight}
+                imageUrl={product.imageUrl}
+                isTraceable={product.isTraceable}
+                onTraceClick={() => handleTraceClick(product)}
+                onAddToCart={() => addItemToCart(product)}
+              />
+            ))
+        )}
       </main>
 
-      {/* 4. Traceability Modal (no change) */}
       {selectedProduct && (
         <TraceabilityModal
           isOpen={isModalOpen}
@@ -101,7 +123,6 @@ const MarketplacePage: React.FC = () => {
         />
       )}
 
-      {/* 5. Mobile Navbar (no change) */}
       <MobileNavbar />
     </Layout>
   );

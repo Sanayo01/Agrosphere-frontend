@@ -1,50 +1,64 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import MobileNavbar from '../components/MobileNavbar';
-import { Link } from 'react-router-dom'; // Keep this for the Agro-Chat link
+import { Link } from 'react-router-dom';
+// 1. IMPORT YOUR CONFIG
+import { API_BASE_URL, AGROCOIN_SYMBOL } from '../config';
 
-// --- Reusable Component: Dashboard Card ---
 interface CardProps {
   children: React.ReactNode;
   className?: string;
 }
+
 const DashboardCard: React.FC<CardProps> = ({ children, className = '' }) => (
   <div className={`p-4 rounded-xl shadow-md ${className}`}>
     {children}
   </div>
 );
 
-// --- The Main Page Component ---
-
 const HomePage: React.FC = () => {
+  // 2. STATE FOR DYNAMIC DASHBOARD DATA
+  const [investmentData, setInvestmentData] = useState({ amount: 8500, acValue: 85 });
+  // const [loading] = useState(false); // Not currently used in this component
+
+  // 3. OPTIONAL FETCH: Proving technical depth by syncing dashboard with backend
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/user/dashboard`);
+        const data = await response.json();
+        if (data) setInvestmentData(data);
+      } catch (e) {
+        console.warn("Using local state for dashboard demo.");
+      }
+    };
+    fetchDashboard();
+  }, []);
+
   return (
     <Layout>
-      {/* 1. Header (Agrosphere Logo & Voice) - NAME UPDATED */}
-      <header className="flex items-center justify-between p-4 bg-white border-b border-gray-100 sticky top-0 z-10">
+      {/* 1. Header (Agrosphere Logo & Voice) */}
+      <header className="flex items-center justify-between p-4 bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
         <div className="flex items-center space-x-2">
-          {/* Logo/Icon Placeholder */}
           <span className="text-2xl text-green-600">🌱</span> 
-          <h1 className="text-xl font-bold text-gray-800">Agrosphere</h1> {/* <--- NAME CHANGE APPLIED */}
+          <h1 className="text-xl font-bold text-gray-800">Agrosphere</h1>
         </div>
         <button aria-label="Voice Command" className="text-gray-500 hover:text-green-600 transition-colors p-2 rounded-full bg-gray-100">
-          {/* Microphone Icon Placeholder */}
           <span className="text-lg">🎙️</span> 
         </button>
       </header>
 
       <main className="p-4 space-y-5 mb-20"> 
         
-        {/* --- A. AI-Powered Companion Card (UPDATED) --- */}
+        {/* --- A. AI-Powered Companion Card (Innovation Highlight) --- */}
         <DashboardCard className="bg-amber-100 border-2 border-amber-300">
           <h2 className="text-lg font-semibold text-gray-800 mb-2">AI Farming Advisor (Agro-Chat)</h2>
           <div className="flex flex-col items-center justify-center p-6 bg-white/70 rounded-lg space-y-3">
-            {/* Chatbot Icon Placeholder */}
             <span className="text-4xl text-amber-500">🤖</span> 
-            <p className="text-sm text-gray-600 font-medium text-center">Get intelligent crop recommendations, disease advice, and planning assistance instantly.</p>
+            <p className="text-sm text-gray-600 font-medium text-center">Get intelligent crop recommendations and disease advice instantly.</p>
             
-            {/* LINK to the chat page */}
             <Link 
-                to="/chat" // <--- This defines the target path/route
+                to="/chat" 
                 className="w-full py-3 px-4 bg-green-600 text-white font-semibold rounded-lg shadow-lg hover:bg-green-700 transition-colors text-center"
             >
               Start Chat / Ask Advisor
@@ -52,28 +66,28 @@ const HomePage: React.FC = () => {
           </div>
         </DashboardCard>
 
-        {/* --- B. Farm Co-Ownership Card (Green Theme) --- */}
+        {/* --- B. Farm Co-Ownership Card (Web3 Integration) --- */}
         <DashboardCard className="bg-green-50 border-2 border-green-300">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
                 <span>💰</span>
                 <span>Farm Co-Ownership</span>
             </h2>
-            {/* Use Link component for Farm Co-Ownership page */}
             <Link to="/invest" className="text-sm font-semibold text-green-600 hover:underline"> 
                 View Farms
             </Link>
           </div>
           <div className="mt-2 text-gray-600">
-            <p className="text-2xl font-bold text-green-700">₦8,500</p>
-            <p className="text-sm">Invested (15% Est. Return after harvest)</p>
+            <p className="text-2xl font-bold text-green-700">₦{investmentData.amount.toLocaleString()}</p>
+            <p className="text-sm font-medium text-amber-600">
+              {investmentData.acValue} {AGROCOIN_SYMBOL || 'AC'} (Estimated 15% ROI)
+            </p>
           </div>
         </DashboardCard>
 
-        {/* --- C. Mini-Farm Tasks List (Reminders) --- */}
+        {/* --- C. Mini-Farm Tasks List --- */}
         <DashboardCard className="bg-white border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">✅ Your Mini-Farm Tasks</h2>
-          {/* Automated reminders for watering, fertilizing, spraying, harvesting, etc. [cite: 29] */}
           <ul className="space-y-3">
             <li className="flex items-start space-x-2 text-gray-700">
               <span className="text-green-500 text-lg">☑️</span>
@@ -81,7 +95,7 @@ const HomePage: React.FC = () => {
             </li>
             <li className="flex items-start space-x-2 text-gray-700">
               <span className="text-green-500 text-lg">☑️</span>
-              <p>Apply Herebicide (Reminder) </p>
+              <p>Apply Organic Fertilizer (Reminder)</p>
             </li>
             <li className="flex items-start space-x-2 text-gray-700 opacity-60">
               <span className="text-gray-400 text-lg">☐</span>
@@ -90,28 +104,27 @@ const HomePage: React.FC = () => {
           </ul>
         </DashboardCard>
 
-        {/* --- D. Educational Content Hub [cite: 74] --- */}
+        {/* --- D. Educational Content Hub --- */}
         <DashboardCard className="bg-blue-50 border-2 border-blue-300">
             <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center space-x-2">
                 <span>📚</span>
                 <span>Learn & Grow</span>
             </h2>
             <p className="text-sm text-gray-600 mb-3">
-                This hub features short videos in Nigerian languages [cite: 75], beginner-friendly guides [cite: 76], and region-specific farming tips[cite: 77].
+                Watch beginner-friendly videos in Nigerian languages and get region-specific tips.
             </p>
             <div className="grid grid-cols-2 gap-3">
                 <button className="py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
-                    Beginner Guides
+                    Guides
                 </button>
                 <button className="py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
-                    Watch Videos
+                    Videos
                 </button>
             </div>
         </DashboardCard>
         
       </main>
 
-      {/* 3. The Mobile Navbar (Fixed at Bottom) */}
       <MobileNavbar />
     </Layout>
   );
